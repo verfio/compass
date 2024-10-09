@@ -51,3 +51,21 @@ features:
       label: ""
       link: ""
 ---
+<!-- Your content here -->
+
+<script>
+  window.difyChatbotConfig = {
+    token: '2VcXq2k2XuHCtyDo',
+    baseUrl: 'http://verf.io'
+  }
+</script>
+<script
+  src="http://verf.io/embed.min.js"
+  id="2VcXq2k2XuHCtyDo"
+  defer>
+</script>
+<style>
+  #dify-chatbot-bubble-button {
+    background-color: #1C64F2 !important;
+  }
+</style>
