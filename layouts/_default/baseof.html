@@ -49,21 +49,22 @@
 
     <!-- script (always cache it) -->
     {{ partialCached "essentials/script.html" . }}
+    <!-- Dify Chatbot Embed Code (in the footer) -->
     <script>
-     window.difyChatbotConfig = {
-      token: '2VcXq2k2XuHCtyDo',
-      baseUrl: 'https://verf.io'
-     }
+      window.difyChatbotConfig = {
+        token: '2VcXq2k2XuHCtyDo',
+        baseUrl: 'https://verf.io'
+      }
     </script>
     <script
-     src="https://verf.io/embed.min.js"
-     id="2VcXq2k2XuHCtyDo"
-     defer>
+      src="https://verf.io/embed.min.js"
+      id="2VcXq2k2XuHCtyDo"
+      defer>
     </script>
     <style>
       #dify-chatbot-bubble-button {
         background-color: #1C64F2 !important;
       }
-   </style>
+    </style>
   </body>
 </html>
