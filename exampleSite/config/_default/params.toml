@@ -63,10 +63,10 @@ content = "You must replace the **baseURL** in **hugo.toml** file when deploying
 # seo module: https://github.com/gethugothemes/hugo-modules/tree/master/seo-tools/basic-seo
 [metadata]
 keywords = ["AI", "Assistant"]
-description = "Meet Compass: your Personal AI Concierge"
+description = "Meet Compass: Your Personal AI Concierge"
 author = "zeon.studio"
 twitter = "zeon_studio"
-image = "images/og-image.png"
+image = "images/og_image.png"
 
 
 # site verifications
