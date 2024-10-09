@@ -18,7 +18,7 @@ testimonials:
   - name: "Sarah Thompson"
     designation: "IT Manager, Lakeside Inn"
     avatar: "/images/avatar-sm.png"
-    content: "Compass has revolutionized our hotel operations! The AI assistant handles guest inquiries seamlessly, allowing our staff to focus on providing exceptional service. The response time is impressive, and our guests appreciate the quick answers to their questions."
+    content: "The AI concierge has truly transformed our hotel operations! The speed of responses is remarkable, and our guests love how quickly their questions are answered. This technology has not only improved efficiency but also enhanced the overall guest experience. We're thrilled with the positive impact it has made on our team and our visitors!"
 
   - name: "David Martinez"
     designation: "General Manager, Mountain View Lodge"
