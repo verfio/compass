@@ -37,9 +37,9 @@ features:
       - "Personalized welcome messages and room setup recommendations"
       - "Ability to consider dietary restrictions, accessibility needs, and personal interests"
     button:
-      enable: true
+      enable: false
       label: "Get Started Now"
-      link: "https://github.com/zeon-studio/hugoplate"
+      link: "https://verf.io/chat/2VcXq2k2XuHCtyDo"
 
   - title: "Local Insights"
     image: "/images/service-3.png"
