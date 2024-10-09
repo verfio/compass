@@ -13,7 +13,7 @@ banner:
 features:
   - title: "Always On Course"
     image: "/images/service-1.png"
-    content: "Compass is available 24/7, providing instant responses and solutions whenever you need them."
+    content: "Compass is available 24/7, providing instant responses and solutions whenever guests need them."
     bulletpoints:
       - "24/7 availability for round-the-clock assistance."
       - "Instant response times, typically under 5 seconds."
@@ -28,7 +28,7 @@ features:
 
   - title: "Personalized Pathways"
     image: "/images/service-2.png"
-    content: "Enjoy tailor-made suggestions for dining, activities, and amenities based on your unique preferences."
+    content: "Provide tailor-made suggestions for dining, activities, and amenities based on guests' preferences."
     bulletpoints:
       - "AI-driven preference learning from each interaction"
       - "Customized recommendations based on guest history and current context"
@@ -43,7 +43,7 @@ features:
 
   - title: "Local Insights"
     image: "/images/service-3.png"
-    content: "Let Compass handle your bookings for restaurants, spa treatments, or local attractions with ease."
+    content: "Tap into Compass's extensive knowledge of local attractions, events, and hidden gems."
     bulletpoints:
       - "Comprehensive database of local attractions, events, and hidden gems."
       - "Real-time updates on local weather, traffic, and event schedules."
