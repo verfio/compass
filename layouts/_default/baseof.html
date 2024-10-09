@@ -67,10 +67,14 @@
       }
     
       .dify-chatbot-window {
-        width: 100% !important;  /* Full width */
-        height: 100% !important; /* Full height */
-        max-width: 100vw !important; /* Max viewport width */
-        max-height: 100vh !important; /* Max viewport height */
+        width: 90vw !important;  /* Initial width */
+        max-width: 1000px !important; /* Optional: limit max width */
+        height: auto !important; /* Adjust height as needed */
+        margin: 0 auto; /* Center the window */
+        resize: both; /* Allow resizing */
+        overflow: auto; /* Allow scrolling if content overflows */
+        border: 1px solid #ccc; /* Optional: for visibility */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Optional: for styling */
       }
     </style>
   </body>
