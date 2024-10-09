@@ -7,7 +7,7 @@ banner:
   button:
     enable: true
     label: "Get Started For Free"
-    link: "https://github.com/zeon-studio/hugoplate"
+    link: "https://verf.io/chat/2VcXq2k2XuHCtyDo"
 
 # Features
 features:
@@ -24,7 +24,7 @@ features:
     button:
       enable: false
       label: "Get Started Now"
-      link: "#"
+      link: "https://verf.io/chat/2VcXq2k2XuHCtyDo"
 
   - title: "Personalized Pathways"
     image: "/images/service-2.png"
