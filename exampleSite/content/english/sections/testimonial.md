@@ -1,29 +1,29 @@
 ---
 enable: true
 title: "What Users Are Saying About Compass"
-description: "Don't just take our word for it - hear from some of our satisfied users!  Check out some of our testimonials below to see what others are saying about Hugoplate."
+description: "Don't just take our word for it - hear from some of our satisfied users!"
 
 # Testimonials
 testimonials:
-  - name: "Marvin McKinney"
-    designation: "Web Designer"
+  - name: "Emily Johnson"
+    designation: "Operations Manager, Grandview Hotel"
     avatar: "/images/avatar-sm.png"
-    content: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Qui iusto illo molestias, assumenda expedita commodi inventore non itaque molestiae voluptatum dolore, facilis sapiente, repellat veniam."
+    content: "Implementing Compass was a breeze! The integration with our existing systems was smooth, and the user-friendly interface means that both our staff and guests can navigate it easily. It's like having a personal concierge available 24/7!"
 
-  - name: "Marvin McKinney"
-    designation: "Web Designer"
+  - name: "Michael Lee"
+    designation: "Guest Relations Director, Ocean Breeze Resort"
     avatar: "/images/avatar-sm.png"
-    content: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Qui iusto illo molestias, assumenda expedita commodi inventore non itaque molestiae voluptatum dolore, facilis sapiente, repellat veniam."
+    content: "Compass has revolutionized our hotel operations! The AI assistant handles guest inquiries seamlessly, allowing our staff to focus on providing exceptional service. The response time is impressive, and our guests appreciate the quick answers to their questions."
 
-  - name: "Marvin McKinney"
-    designation: "Web Designer"
+  - name: "Sarah Thompson"
+    designation: "IT Manager, Lakeside Inn"
     avatar: "/images/avatar-sm.png"
-    content: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Qui iusto illo molestias, assumenda expedita commodi inventore non itaque molestiae voluptatum dolore, facilis sapiente, repellat veniam."
+    content: "Compass has revolutionized our hotel operations! The AI assistant handles guest inquiries seamlessly, allowing our staff to focus on providing exceptional service. The response time is impressive, and our guests appreciate the quick answers to their questions."
 
-  - name: "Marvin McKinney"
-    designation: "Web Designer"
+  - name: "David Martinez"
+    designation: "General Manager, Mountain View Lodge"
     avatar: "/images/avatar-sm.png"
-    content: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Qui iusto illo molestias, assumenda expedita commodi inventore non itaque molestiae voluptatum dolore, facilis sapiente, repellat veniam."
+    content: "Compass has been a game changer for our hotel! Not only does it save us time and reduce the workload on our staff, but it has also proven to be a cost-effective solution. The AI assistant provides excellent customer support while helping us optimize our resources. Highly recommended!"
 
 # don't create a separate page
 _build:
