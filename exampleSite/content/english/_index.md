@@ -1,7 +1,7 @@
 ---
 # Banner
 banner:
-  title: "Meet Compass: Your Personal AI Concierge"
+  title: "Meet Compass<br>Your Personal AI Concierge"
   content: "Welcome to a new era of hospitality. Introducing Compass, our state-of-the-art AI concierge, designed to guide you to an unparalleled hotel experience."
   image: "/images/banner.png"
   button:
