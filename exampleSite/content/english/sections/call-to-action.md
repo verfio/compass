@@ -1,12 +1,12 @@
 ---
 enable: true
-title: "Ready to build your next project with Hugo?"
+title: "Ready to build your next hotel experience with Compass?"
 image: "/images/call-to-action.png"
-description: "Experience the future of web development with Hugoplate and Hugo. Build lightning-fast static sites with ease and flexibility."
+description: "Experience the future of hospitality with Compass."
 button:
   enable: true
   label: "Get Started Now"
-  link: "https://github.com/zeon-studio/hugoplate"
+  link: "https://verfio.github.io/compass/"
 
 # don't create a separate page
 _build:
