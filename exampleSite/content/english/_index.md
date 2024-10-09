@@ -1,8 +1,8 @@
 ---
 # Banner
 banner:
-  title: "Your Premier Hotel Assistant Awaits!"
-  content: "Introducing Compass, a feature-rich AI assistant crafted with Anthropic Claude. Designed to streamline your hotel management tasks, Compass offers essential tools like real-time booking management, personalized guest interactions, and insightful analytics. Elevate your business, enhance customer satisfaction, and save valuable time. Discover how Compass can transform your hotel operations today!"
+  title: "Meet Compass: Your Personal AI Concierge"
+  content: "Welcome to a new era of hospitality. Introducing Compass, our state-of-the-art AI concierge, designed to guide you to an unparalleled hotel experience."
   image: "/images/banner.png"
   button:
     enable: true
@@ -11,61 +11,49 @@ banner:
 
 # Features
 features:
-  - title: "What's Included in Hugoplate"
+  - title: "Always On Course"
     image: "/images/service-1.png"
-    content: "Hugoplate is a comprehensive starter template that includes everything you need to get started with your Hugo project. What's Included in Hugoplate"
+    content: "Compass is available 24/7, providing instant responses and solutions whenever you need them."
     bulletpoints:
-      - "10+ Pre-build pages"
-      - "95+ Google Pagespeed Score"
-      - "Build with Hugo and TailwindCSS for easy and customizable styling"
-      - "Fully responsive on all devices"
-      - "SEO-optimized for better search engine rankings"
-      - "**Open-source and free** for personal and commercial use"
+      - "24/7 availability for round-the-clock assistance."
+      - "Instant response times, typically under 5 seconds."
+      - "Multi-language support for global travelers."
+      - "Seamless integration with hotel services for quick issue resolution."
+      - "Ability to handle multiple requests simultaneously."
+      - "Consistent service quality, immune to human factors like fatigue."
     button:
       enable: false
       label: "Get Started Now"
       link: "#"
 
-  - title: "Discover the Key Features Of Hugo"
+  - title: "Personalized Pathways"
     image: "/images/service-2.png"
-    content: "Hugo is an all-in-one web framework for building fast, content-focused websites. It offers a range of exciting features for developers and website creators. Some of the key features are:"
+    content: "Enjoy tailor-made suggestions for dining, activities, and amenities based on your unique preferences."
     bulletpoints:
-      - "Zero JS, by default: No JavaScript runtime overhead to slow you down."
-      - "Customizable: Tailwind, MDX, and 100+ other integrations to choose from."
-      - "UI-agnostic: Supports React, Preact, Svelte, Vue, Solid, Lit and more."
+      - "AI-driven preference learning from each interaction"
+      - "Customized recommendations based on guest history and current context"
+      - "Real-time adaptation to changing guest needs and preferences"
+      - "Integration with local databases for up-to-date suggestions"
+      - "Personalized welcome messages and room setup recommendations"
+      - "Ability to consider dietary restrictions, accessibility needs, and personal interests"
     button:
       enable: true
       label: "Get Started Now"
       link: "https://github.com/zeon-studio/hugoplate"
 
-  - title: "The Top Reasons to Choose Hugo for Your Hugo Project"
+  - title: "Local Insights"
     image: "/images/service-3.png"
-    content: "With Hugo, you can build modern and content-focused websites without sacrificing performance or ease of use."
+    content: "Let Compass handle your bookings for restaurants, spa treatments, or local attractions with ease."
     bulletpoints:
-      - "Instantly load static sites for better user experience and SEO."
-      - "Intuitive syntax and support for popular frameworks make learning and using Hugo a breeze."
-      - "Use any front-end library or framework, or build custom components, for any project size."
-      - "Built on cutting-edge technology to keep your projects up-to-date with the latest web standards."
+      - "Comprehensive database of local attractions, events, and hidden gems."
+      - "Real-time updates on local weather, traffic, and event schedules."
+      - "Curated recommendations for authentic local experiences."
+      - "Updates on seasonal events, festivals, and temporary exhibits."
+      - "Information on local customs, etiquette, and cultural nuances."
+      - "Suggestions for off-the-beaten-path experiences tailored to guest interests."
     button:
       enable: false
       label: ""
       link: ""
 ---
 <!-- Your content here -->
-
-<script>
-  window.difyChatbotConfig = {
-    token: '2VcXq2k2XuHCtyDo',
-    baseUrl: 'http://verf.io'
-  }
-</script>
-<script
-  src="http://verf.io/embed.min.js"
-  id="2VcXq2k2XuHCtyDo"
-  defer>
-</script>
-<style>
-  #dify-chatbot-bubble-button {
-    background-color: #1C64F2 !important;
-  }
-</style>
