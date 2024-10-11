@@ -2,7 +2,7 @@
 title: "Hey, I am Compass!"
 meta_title: "About"
 description: "About me"
-image: "/images/logo.png"
+image: "/images/favicon.png"
 draft: false
 ---
 
