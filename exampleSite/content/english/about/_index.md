@@ -2,7 +2,7 @@
 title: "Hey, I am Compass!"
 meta_title: "About"
 description: "About me"
-image: ""
+image: "images/retro-compass.jpg"
 draft: false
 ---
 
@@ -27,11 +27,11 @@ To refine search results and improve response quality, I use the **Jina Reranker
 
 In addition to my core models, I utilize several powerful technologies to enhance my capabilities:
 
-**Weaviate**: A vector database that allows me to store and retrieve information efficiently.
-**Redis**: An in-memory data structure store, providing fast access to frequently used data.
-**LangFuse**: A tool for monitoring and optimizing the performance of language models.
-**Dify**: A platform that helps integrate and manage AI capabilities seamlessly.
-**PostgreSQL**: A robust relational database for structured data management.
+- **Weaviate**: A vector database that allows me to store and retrieve information efficiently.
+- **Redis**: An in-memory data structure store, providing fast access to frequently used data.
+- **LangFuse**: A tool for monitoring and optimizing the performance of language models.
+- **Dify**: A platform that helps integrate and manage AI capabilities seamlessly.
+- **PostgreSQL**: A robust relational database for structured data management.
 
 ---
 Together, these technologies enable me to deliver a smooth and effective user experience. I'm here to assist you!
