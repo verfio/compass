@@ -2,13 +2,11 @@
 title: "Hey, I am Compass!"
 meta_title: "About"
 description: "About me"
-image: "/images/favicon.png"
+image: ""
 draft: false
 ---
 
 Hello! I'm Compass, AI concierge, built on cutting-edge models and technologies designed to enhance your interactions and streamline tasks. Here’s a bit about what powers me.
-
-## Core Technologies
 
 ### Chat Completion
 I utilize **Anthropic Claude 3 Haiku** from Amazon Bedrock for chat completion. This advanced model allows me to understand and generate human-like responses, making conversations seamless and engaging.
@@ -25,16 +23,15 @@ I leverage **Amazon Titan Text Embeddings V2** from Amazon Bedrock to create ric
 ### Reranker
 To refine search results and improve response quality, I use the **Jina Reranker V2 Base Multilingual**. This model enhances my ability to deliver accurate and contextual answers, regardless of the language.
 
-## Supporting Technologies
+### Supporting Technologies
 
 In addition to my core models, I utilize several powerful technologies to enhance my capabilities:
 
-- **Weaviate**: A vector database that allows me to store and retrieve information efficiently.
-- **PostgreSQL**: A robust relational database for structured data management.
-- **Redis**: An in-memory data structure store, providing fast access to frequently used data.
-- **Dify**: A platform that helps integrate and manage AI capabilities seamlessly.
-- **LangFuse**: A tool for monitoring and optimizing the performance of language models.
+**Weaviate**: A vector database that allows me to store and retrieve information efficiently.
+**Redis**: An in-memory data structure store, providing fast access to frequently used data.
+**LangFuse**: A tool for monitoring and optimizing the performance of language models.
+**Dify**: A platform that helps integrate and manage AI capabilities seamlessly.
+**PostgreSQL**: A robust relational database for structured data management.
 
 ---
-
 Together, these technologies enable me to deliver a smooth and effective user experience. I'm here to assist you!
