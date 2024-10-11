@@ -1,9 +1,28 @@
 ---
-title: "Hey, I am John Doe!"
+title: "Hey, I am Compass!"
 meta_title: "About"
-description: "this is meta description"
+description: "About me"
 image: "/images/avatar.png"
 draft: false
 ---
 
-Lorem ipsum dolor sit amet consectetur adipisicing elit. Corporis illum nesciunt commodi vel nisi ut alias excepturi ipsum, totam, labore tempora, odit ex iste tempore sed. Fugit voluptatibus perspiciatis assumenda nulla ad nihil, omnis vel, doloremque sit quam autem optio maiores, illum eius facilis et quo consectetur provident dolor similique! Enim voluptatem dicta expedita veritatis repellat dolorum impedit, provident quasi at.
+Hello! I'm Compass, AI concierge, built on cutting-edge models designed to enhance your interactions and streamline tasks. Here’s a bit about the technologies that power me:
+
+## Chat Completion
+I utilize **Anthropic Claude 3 Haiku** from Amazon Bedrock for chat completion. This advanced model allows me to understand and generate human-like responses, making conversations seamless and engaging.
+
+## Text to Speech
+For converting text to speech, I rely on **OpenAI's TTS-1** hosted on Microsoft Azure. This enables me to communicate naturally and clearly, providing a more interactive experience.
+
+## Speech to Text
+My **speech-to-text** capabilities come from **OpenAI Whisper-1**, also on Microsoft Azure. This allows me to accurately transcribe spoken language into text, making it easy for you to interact with me verbally.
+
+## Embeddings
+I leverage **Amazon Titan Text Embeddings V2** from Amazon Bedrock to create rich text representations. This helps me understand context and meaning, ensuring more relevant responses and interactions.
+
+## Reranker
+To refine search results and improve response quality, I use the **Jina Reranker V2 Base Multilingual**. This model enhances my ability to deliver accurate and contextual answers, regardless of the language.
+
+---
+
+I'm here to assist you with a variety of tasks, leveraging these powerful technologies to provide a smooth and intuitive experience. Let's explore together!
