@@ -6,8 +6,8 @@ banner:
   image: "/images/banner.png"
   button:
     enable: true
-    label: "Get Started For Free"
-    link: "https://verf.io/chat/2VcXq2k2XuHCtyDo"
+    label: "Get Started In Telegram"
+    link: "https://t.me/aicompass_bot"
 
 # Features
 features:
