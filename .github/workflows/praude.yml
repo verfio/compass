@@ -71,6 +71,22 @@ jobs:
           # Save the response to a file
           echo "$RESPONSE_BODY" > response.json
 
+      - name: Upload Response Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: response-artifact
+          path: response.json
+
+  post_comment:
+    runs-on: ubuntu-latest
+    needs: review  # Ensure this job runs after the review job
+    steps:
+      - name: Download Response Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: response-artifact
+          path: .
+
       - name: Post Review Comment
         if: always()
         uses: actions/github-script@v6
@@ -95,13 +111,6 @@ jobs:
               console.error('Error parsing JSON:', error);
               commentBody = '⚠️ Error: Failed to parse response from Dify.';
             }
-
-            // Log the context for debugging
-            console.log('Context:', {
-              issue_number: context.issue.number, // This is the PR number
-              owner: context.repo.owner,
-              repo: context.repo.name,
-            });
 
             // Post the comment on the pull request
             await github.rest.issues.createComment({
