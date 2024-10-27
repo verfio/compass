@@ -18,7 +18,7 @@ jobs:
             -d "{
               \"inputs\": {},
               \"query\": \"Review PR: $PR_TITLE\",
-              \"response_mode\": \"blocking\",
+              \"response_mode\": \"streaming\",
               \"conversation_id\": \"pr_$PR_NUMBER\",
               \"user\": \"github\"
             }")
