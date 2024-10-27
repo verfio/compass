@@ -24,8 +24,11 @@ jobs:
           # Get files changed
           FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | tr '\n' ', ')
           
+          # Get the actual changes in the files
+          CHANGED_LINES=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+
           # Create and escape query
-          QUERY_TEXT="Review PR: ${{ github.event.pull_request.title }} with changes in files: ${FILES_CHANGED}"
+          QUERY_TEXT="Review PR: ${{ github.event.pull_request.title }} with changes in files: ${FILES_CHANGED}. Changes: ${CHANGED_LINES}"
           QUERY_ESCAPED=$(echo "$QUERY_TEXT" | jq -Rsc .)
           echo "query=${QUERY_ESCAPED}" >> $GITHUB_OUTPUT
 
@@ -57,8 +60,13 @@ jobs:
 
           # Read the response line by line
           while IFS= read -r line; do
-            # Append each line to the RESPONSE_BODY
-            RESPONSE_BODY+="$line"
+            # Check if the line starts with "data:"
+            if [[ $line == data:* ]]; then
+              # Extract the JSON part
+              json_data="${line#data: }"
+              # Append each parsed JSON to the RESPONSE_BODY
+              RESPONSE_BODY+="$json_data"$'\n'
+            fi
           done <<< "$RESPONSE"
 
           # Output the complete response
