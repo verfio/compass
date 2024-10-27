@@ -52,6 +52,9 @@ jobs:
               \"lines_added\": \"${{ steps.pr_info.outputs.lines_added }}\",
               \"lines_removed\": \"${{ steps.pr_info.outputs.lines_removed }}\",
               \"pr_diff\": ${PR_DIFF_ESCAPED}
+              \"response_mode\": \"streaming\",
+              \"conversation_id\": \"\",
+              \"user\": \"compass\"
             }
           }" > response.json
 
