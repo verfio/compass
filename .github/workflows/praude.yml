@@ -16,72 +16,55 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          python-version: '3.8'  # Specify the Python version you want to use
+          node-version: '16'  # Specify the Node.js version you want to use
 
       - name: Install dependencies
         run: |
-          pip install requests
+          npm install -g typescript ts-node @types/node axios
 
       - name: Collect PR Data and Send to Dify
         id: dify_request
         run: |
-          import os
-          import json
-          import subprocess
-          import requests
+          echo "const fs = require('fs');" > prReview.ts
+          echo "const { execSync } = require('child_process');" >> prReview.ts
+          echo "const axios = require('axios');" >> prReview.ts
+          echo "const base_sha = process.env.GITHUB_BASE_REF;" >> prReview.ts
+          echo "const head_sha = process.env.GITHUB_HEAD_REF;" >> prReview.ts
+          echo "const changed_files = execSync('git diff --name-only ' + base_sha + ' ' + head_sha).toString().trim().split('\\n');" >> prReview.ts
+          echo "const changed_lines = execSync('git diff ' + base_sha + ' ' + head_sha).toString();" >> prReview.ts
+          echo "const query_text = \`Review PR: \${process.env.GITHUB_EVENT_PULL_REQUEST_TITLE} with changes in files: \${changed_files.join(', ')}. Changes: \${changed_lines}\`;" >> prReview.ts
+          echo "const json_data = {" >> prReview.ts
+          echo "  inputs: {}," >> prReview.ts
+          echo "  query: query_text," >> prReview.ts
+          echo "  response_mode: 'streaming'," >> prReview.ts
+          echo "  conversation_id: ''," >> prReview.ts
+          echo "  user: 'github'" >> prReview.ts
+          echo "};" >> prReview.ts
+          echo "axios.post('https://verf.io/v1/chat-messages', json_data, {" >> prReview.ts
+          echo "  headers: {" >> prReview.ts
+          echo "    'Authorization': 'Bearer ' + process.env.DIFY_API_KEY," >> prReview.ts
+          echo "    'Content-Type': 'application/json'" >> prReview.ts
+          echo "  }" >> prReview.ts
+          echo "}).then(response => {" >> prReview.ts
+          echo "  let response_body = '';" >> prReview.ts
+          echo "  response.data.on('data', (line) => {" >> prReview.ts
+          echo "    if (line.startsWith('data:')) {" >> prReview.ts
+          echo "      response_body += line.substring(5) + '\\n';" >> prReview.ts
+          echo "    }" >> prReview.ts
+          echo "  });" >> prReview.ts
+          echo "  response.data.on('end', () => {" >> prReview.ts
+          echo "    fs.writeFileSync('response.json', response_body);" >> prReview.ts
+          echo "  });" >> prReview.ts
+          echo "}).catch(error => {" >> prReview.ts
+          echo "  console.error('Error:', error);" >> prReview.ts
+          echo "});" >> prReview.ts
+          echo "process.exit(0);" >> prReview.ts
 
-          # Get the base and head SHA from the GitHub context
-          base_sha = os.environ['GITHUB_BASE_REF']
-          head_sha = os.environ['GITHUB_HEAD_REF']
-
-          # Get the list of changed files
-          changed_files = subprocess.check_output(
-              ['git', 'diff', '--name-only', base_sha, head_sha]
-          ).decode('utf-8').strip().split('\n')
-
-          # Get the actual changes in the files
-          changed_lines = subprocess.check_output(
-              ['git', 'diff', base_sha, head_sha]
-          ).decode('utf-8')
-
-          # Create the query text
-          query_text = f"Review PR: {os.environ['GITHUB_EVENT_PULL_REQUEST_TITLE']} with changes in files: {', '.join(changed_files)}. Changes: {changed_lines}"
-
-          # Prepare JSON data for Dify API
-          json_data = {
-              "inputs": {},
-              "query": query_text,
-              "response_mode": "streaming",
-              "conversation_id": "",
-              "user": "github"
-          }
-
-          # Send request to Dify API
-          response = requests.post(
-              "https://verf.io/v1/chat-messages",
-              headers={
-                  "Authorization": f"Bearer {os.environ['DIFY_API_KEY']}",
-                  "Content-Type": "application/json"
-              },
-              json=json_data  # Use json parameter to automatically serialize to JSON
-          )
-
-          # Handle streaming response
-          response_body = ""
-          if response.status_code == 200:
-              for line in response.iter_lines():
-                  if line.startswith(b'data:'):
-                      json_line = line.decode('utf-8')[5:]  # Remove 'data: ' prefix
-                      response_body += json_line + "\n"
-          else:
-              print(f"Error: {response.status_code} - {response.text}")
-
-          # Save the response to a file
-          with open('response.json', 'w') as f:
-              f.write(response_body)
+          # Run the TypeScript file
+          npx ts-node prReview.ts
 
       - name: Post Review Comment
         if: always()
