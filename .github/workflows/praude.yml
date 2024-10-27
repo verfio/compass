@@ -6,95 +6,33 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
-    permissions:
-      pull-requests: write
-      contents: read
-    
     steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - name: Collect PR Data
-        id: pr_data
-        shell: bash
-        run: |
-          echo "Collecting PR data..."
-          
-          # Get files changed
-          FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | tr '\n' ', ')
-          
-          # Create and escape query
-          QUERY_TEXT="Review PR ${{ github.event.pull_request.title }} with changes in files ${FILES_CHANGED}"
-          QUERY_ESCAPED=$(echo "$QUERY_TEXT" | jq -Rsc .)
-          echo "query=${QUERY_ESCAPED}" >> $GITHUB_OUTPUT
-
       - name: Send to Dify
-        id: dify_request
-        shell: bash
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
-          echo "Sending request to Dify..."
-          
-          # Prepare JSON data
-          JSON_DATA=$(cat <<EOF
-          {
-            "inputs": {},
-            "query": ${query},
-            "response_mode": "blocking",
-            "conversation_id": "pr_${{ github.event.pull_request.number }}",
-            "user": "github"
-          }
-          EOF
-          )
-          
-          # Send request
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X POST \
+          RESPONSE=$(curl -s -X POST "https://verf.io/v1/chat-messages" \
             -H "Authorization: Bearer ${{ secrets.DIFY_API_KEY }}" \
             -H "Content-Type: application/json" \
-            -d "$JSON_DATA" \
-            "https://verf.io/v1/chat-messages")
+            -d "{
+              \"inputs\": {},
+              \"query\": \"Review PR: $PR_TITLE\",
+              \"response_mode\": \"blocking\",
+              \"conversation_id\": \"pr_$PR_NUMBER\",
+              \"user\": \"github\"
+            }")
           
-          # Get status code and body
-          STATUS_CODE=$(echo "$RESPONSE" | tail -n1)
-          RESPONSE_BODY=$(echo "$RESPONSE" | head -n -1)
+          echo "$RESPONSE" > response.json
           
-          echo "Status Code: $STATUS_CODE"
-          echo "Response: $RESPONSE_BODY"
-          
-          if [ "$STATUS_CODE" = "200" ]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "$RESPONSE_BODY" > response.json
+          if jq -e . >/dev/null 2>&1 <<<"$RESPONSE"; then
+            COMMENT_BODY=$(jq -r '.answer // .text // "No review provided"' response.json)
           else
-            echo "status=error" >> $GITHUB_OUTPUT
-            echo "error_message=API request failed with status $STATUS_CODE" >> $GITHUB_OUTPUT
+            COMMENT_BODY="Error: Invalid response from API"
           fi
-
-      - name: Post Review Comment
-        if: always()
-        uses: actions/github-script@v6
-        with:
-          script: |
-            const fs = require('fs');
-            
-            try {
-              let commentBody;
-              
-              if ('${{ steps.dify_request.outputs.status }}' === 'success') {
-                const responseData = fs.readFileSync('response.json', 'utf8');
-                const response = JSON.parse(responseData);
-                commentBody = response.answer || response.text || 'No review content provided';
-              } else {
-                commentBody = '⚠️ Error: Failed to generate review.\nError: ${{ steps.dify_request.outputs.error_message }}';
-              }
-              
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.name,
-                body: commentBody
-              });
-            } catch (error) {
-              console.error('Error:', error);
-              throw error;
-            }
+          
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/$PR_NUMBER/comments" \
+            -d "{\"body\":\"$COMMENT_BODY\"}"
