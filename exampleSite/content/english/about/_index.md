@@ -9,7 +9,7 @@ draft: false
 Hello! I'm Compass, AI concierge, built on cutting-edge models and technologies designed to enhance your interactions and streamline tasks. Here’s a bit about what powers me.
 
 #### Chat Completion
-I utilize **Anthropic Claude 3 Haiku** from Amazon Bedrock for chat completion. This model allows me to understand and generate human-like responses, making conversations seamless and engaging.
+I utilize **OpenAI GPT-4o mini** from Microsoft Azure for chat completion. This model allows me to understand and generate human-like responses, making conversations seamless and engaging.
 
 #### Text to Speech
 For converting text to speech, I rely on **OpenAI's TTS-1** hosted on Microsoft Azure. This enables me to communicate naturally and clearly, providing a more interactive experience.
