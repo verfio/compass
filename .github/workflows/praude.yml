@@ -35,13 +35,16 @@ jobs:
         run: |
           echo "Sending request to Dify..."
           
+          # Generate a UUID for the conversation_id
+          CONVERSATION_ID=$(uuidgen)
+          
           # Prepare JSON data
           JSON_DATA=$(cat <<EOF
           {
             "inputs": {},
             "query": ${{ steps.pr_data.outputs.query }},
             "response_mode": "streaming",
-            "conversation_id": "pr_${{ github.event.pull_request.number }}",
+            "conversation_id": "${CONVERSATION_ID}",
             "user": "github"
           }
           EOF
