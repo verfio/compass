@@ -1,0 +1,72 @@
+name: PR Review with Praude
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Get PR diff and stats
+        id: pr_info
+        run: |
+          # Get PR diff
+          git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > pr_diff.txt
+          
+          # Get changed files
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | jq -R -s -c 'split("\n")[:-1]')
+          
+          # Get lines added/removed
+          STATS=$(git diff --shortstat ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          LINES_ADDED=$(echo $STATS | grep -o '[0-9]* insertion' | awk '{print $1}')
+          LINES_REMOVED=$(echo $STATS | grep -o '[0-9]* deletion' | awk '{print $1}')
+          
+          # Set outputs
+          echo "changed_files=${CHANGED_FILES}" >> $GITHUB_OUTPUT
+          echo "lines_added=${LINES_ADDED:-0}" >> $GITHUB_OUTPUT
+          echo "lines_removed=${LINES_REMOVED:-0}" >> $GITHUB_OUTPUT
+
+      - name: Send to Dify
+        id: dify_request
+        run: |
+          PR_DIFF=$(cat pr_diff.txt)
+          
+          # Escape JSON special characters
+          PR_DIFF_ESCAPED=$(echo "$PR_DIFF" | jq -sR .)
+          PR_TITLE_ESCAPED=$(echo "${{ github.event.pull_request.title }}" | jq -sR .)
+          PR_DESC_ESCAPED=$(echo "${{ github.event.pull_request.body }}" | jq -sR .)
+          
+          # Construct and send request
+          curl -X POST ${{ secrets.DIFY_ENDPOINT }} \
+          -H "Authorization: Bearer ${{ secrets.DIFY_API_KEY }}" \
+          -H "Content-Type: application/json" \
+          -d "{
+            \"inputs\": {
+              \"pr_title\": ${PR_TITLE_ESCAPED},
+              \"pr_description\": ${PR_DESC_ESCAPED},
+              \"files_changed\": ${{ steps.pr_info.outputs.changed_files }},
+              \"lines_added\": \"${{ steps.pr_info.outputs.lines_added }}\",
+              \"lines_removed\": \"${{ steps.pr_info.outputs.lines_removed }}\",
+              \"pr_diff\": ${PR_DIFF_ESCAPED}
+            }
+          }" > response.json
+
+      - name: Post Review Comment
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const response = JSON.parse(fs.readFileSync('response.json', 'utf8'));
+            
+            const reviewComment = response.answer || response.text || 'No review generated';
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: reviewComment
+            });
