@@ -41,13 +41,7 @@ jobs:
           # Prepare JSON data with an empty conversation_id
           JSON_DATA=$(jq -n \
             --arg query "${{ steps.pr_data.outputs.query }}" \
-            '{
-              inputs: {},
-              query: $query,
-              response_mode: "streaming",
-              conversation_id: "",
-              user: "github"
-            }')
+            '{inputs: {}, query: $query, response_mode: "streaming", conversation_id: "", user: "github"}')
 
           # Send request and handle streaming response
           RESPONSE_BODY=""
