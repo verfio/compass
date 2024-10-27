@@ -32,7 +32,7 @@ jobs:
           QUERY_ESCAPED=$(echo "$QUERY_TEXT" | jq -Rsc .)
           echo "query=${QUERY_ESCAPED}" >> $GITHUB_OUTPUT
 
-      - name: Send to Dify
+            - name: Send to Dify
         id: dify_request
         shell: bash
         run: |
