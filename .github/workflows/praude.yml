@@ -25,7 +25,7 @@ jobs:
           FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | tr '\n' ', ')
           
           # Create and escape query
-          QUERY_TEXT="Review PR ${{ github.event.pull_request.title }} with changes in files ${FILES_CHANGED}"
+          QUERY_TEXT="Review PR: ${{ github.event.pull_request.title }} with changes in files: ${FILES_CHANGED}"
           QUERY_ESCAPED=$(echo "$QUERY_TEXT" | jq -Rsc .)
           echo "query=${QUERY_ESCAPED}" >> $GITHUB_OUTPUT
 
@@ -39,7 +39,7 @@ jobs:
           JSON_DATA=$(cat <<EOF
           {
             "inputs": {},
-            "query": ${query},
+            "query": ${{ steps.pr_data.outputs.query }},
             "response_mode": "streaming",
             "conversation_id": "pr_${{ github.event.pull_request.number }}",
             "user": "github"
