@@ -1,4 +1,4 @@
-name: PR Review with Dify (Debug)
+name: PR Review with Dify
 on:
   pull_request:
     types: [opened, synchronize]
@@ -23,95 +23,64 @@ jobs:
           # Get PR diff
           git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > pr_diff.txt
           PR_DIFF=$(cat pr_diff.txt)
-          echo "Got PR diff of $(wc -l < pr_diff.txt) lines"
           
           # Get files changed
           FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | tr '\n' ', ')
-          echo "Changed files: $FILES_CHANGED"
           
           # Create the query
-          QUERY="Please review this Pull Request:
-          Title: ${{ github.event.pull_request.title }}
-          Description: ${{ github.event.pull_request.body }}
-          Files Changed: ${FILES_CHANGED}
-          
-          Changes:
-          ${PR_DIFF}"
+          QUERY="Review PR: ${{ github.event.pull_request.title }}. Changes: $FILES_CHANGED"
           
           # Escape for JSON
           QUERY_ESCAPED=$(echo "$QUERY" | jq -Rs .)
-          echo "query=$QUERY_ESCAPED" >> $GITHUB_OUTPUT
-          
-          echo "Data collection complete"
-          echo "Query length: $(echo $QUERY | wc -c) characters"
+          echo "query=$QUERY_ESCAPED" >> "$GITHUB_OUTPUT"
 
       - name: Send to Dify
         id: dify_request
         run: |
           echo "Sending request to Dify..."
           
-          # Construct request payload
-          PAYLOAD="{
-            \"inputs\": {},
-            \"query\": ${{ steps.pr_data.outputs.query }},
-            \"response_mode\": \"blocking\",
-            \"conversation_id\": \"pr_${{ github.event.pull_request.number }}\",
-            \"user\": \"github_${{ github.repository_owner }}\"
-          }"
+          REQUEST_DATA="{\"inputs\": {}, \"query\": ${{ steps.pr_data.outputs.query }}, \"response_mode\": \"blocking\", \"conversation_id\": \"pr_${{ github.event.pull_request.number }}\", \"user\": \"github\"}"
           
-          echo "Request payload preview (first 500 chars):"
-          echo "$PAYLOAD" | head -c 500
+          echo "Request data: $REQUEST_DATA"
           
-          # Send request
-          echo "Sending request..."
-          RESPONSE=$(curl -v -X POST 'https://verf.io/v1/chat-messages' \
-            --header 'Authorization: Bearer ${{ secrets.DIFY_API_KEY }}' \
-            --header 'Content-Type: application/json' \
-            --data-raw "$PAYLOAD" 2>&1)
+          RESPONSE=$(curl -s -w "\\n%{http_code}" \
+            -X POST \
+            -H "Authorization: Bearer ${{ secrets.DIFY_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "$REQUEST_DATA" \
+            "https://verf.io/v1/chat-messages")
           
-          echo "Raw response:"
-          echo "$RESPONSE"
+          HTTP_STATUS=$(echo "$RESPONSE" | tail -n1)
+          RESPONSE_BODY=$(echo "$RESPONSE" | sed '$d')
           
-          # Extract status code
-          STATUS_CODE=$(echo "$RESPONSE" | grep "< HTTP" | awk '{print $3}')
-          echo "Status code: $STATUS_CODE"
+          echo "HTTP Status: $HTTP_STATUS"
+          echo "Response body: $RESPONSE_BODY"
           
-          # Process response
-          if [[ "$STATUS_CODE" == "200" ]]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "$RESPONSE" | sed '1,/^\r$/d' > response.json
-            echo "Response saved to response.json"
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "status=success" >> "$GITHUB_OUTPUT"
+            echo "$RESPONSE_BODY" > response.json
           else
-            echo "status=error" >> $GITHUB_OUTPUT
-            echo "error_message=API request failed with status $STATUS_CODE" >> $GITHUB_OUTPUT
-            echo "Error response: $RESPONSE"
+            echo "status=error" >> "$GITHUB_OUTPUT"
+            echo "error_message=API request failed with status $HTTP_STATUS" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Post Review Comment
+        if: always()
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
             
-            console.log('Preparing to post comment...');
-            
             try {
               let commentBody;
               
               if ('${{ steps.dify_request.outputs.status }}' === 'success') {
-                console.log('Reading response.json...');
-                const responseContent = fs.readFileSync('response.json', 'utf8');
-                console.log('Response content:', responseContent);
-                
-                const response = JSON.parse(responseContent);
+                const responseData = fs.readFileSync('response.json', 'utf8');
+                const response = JSON.parse(responseData);
                 commentBody = response.answer || response.text || 'No review content provided';
               } else {
-                console.log('Using error message for comment');
                 commentBody = '⚠️ Error: Failed to generate review.\nError: ${{ steps.dify_request.outputs.error_message }}';
               }
-              
-              console.log('Posting comment...');
-              console.log('Comment preview:', commentBody.substring(0, 500));
               
               await github.rest.issues.createComment({
                 issue_number: context.issue.number,
@@ -119,9 +88,7 @@ jobs:
                 repo: context.repo.name,
                 body: commentBody
               });
-              
-              console.log('Comment posted successfully');
             } catch (error) {
-              console.error('Error posting comment:', error);
+              console.error('Error:', error);
               throw error;
             }
