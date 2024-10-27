@@ -44,7 +44,7 @@ jobs:
             "inputs": {},
             "query": ${{ steps.pr_data.outputs.query }},
             "response_mode": "streaming",
-            "conversation_id": "${CONVERSATION_ID}",
+            "conversation_id": "",
             "user": "github"
           }
           EOF
