@@ -119,17 +119,20 @@ jobs:
             // Log the final comment body
             console.log('Final Comment Body:', commentBody);
 
+            // Extract owner and repo from github.repository
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+
             // Log context values for debugging
             console.log('Context:', {
               issue_number: context.issue.number, // This is the PR number
-              owner: context.repo.owner,
-              repo: context.repo.name,
+              owner: owner,
+              repo: repo,
             });
 
             // Post the comment on the pull request
             await github.rest.issues.createComment({
               issue_number: context.issue.number, // Use the PR number here
-              owner: context.repo.owner,
-              repo: context.repo.name,
+              owner: owner,
+              repo: repo,
               body: commentBody || '⚠️ No review content provided.'
             });
