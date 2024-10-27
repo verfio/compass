@@ -22,10 +22,11 @@ jobs:
           
           # Get PR diff
           git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > pr_diff.txt
-          PR_DIFF=$(cat pr_diff.txt)
+          echo "PR Diff collected."  # Debugging statement
           
           # Get files changed
           FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | tr '\n' ', ')
+          echo "Files changed: $FILES_CHANGED"  # Debugging statement
           
           # Create the query
           QUERY="Review PR: ${{ github.event.pull_request.title }}. Changes: $FILES_CHANGED"
