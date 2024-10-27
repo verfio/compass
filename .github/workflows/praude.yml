@@ -119,6 +119,13 @@ jobs:
             // Log the final comment body
             console.log('Final Comment Body:', commentBody);
 
+            // Log context values for debugging
+            console.log('Context:', {
+              issue_number: context.issue.number, // This is the PR number
+              owner: context.repo.owner,
+              repo: context.repo.name,
+            });
+
             // Post the comment on the pull request
             await github.rest.issues.createComment({
               issue_number: context.issue.number, // Use the PR number here
