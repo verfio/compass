@@ -83,9 +83,14 @@ jobs:
             try {
               let commentBody;
               
+              // Read the response data
+              const responseData = fs.readFileSync('response.json', 'utf8');
+              console.log('Response Data:', responseData); // Debugging statement
+
+              // Attempt to parse the response
+              const response = JSON.parse(responseData);
+              
               if ('${{ steps.dify_request.outputs.status }}' === 'success') {
-                const responseData = fs.readFileSync('response.json', 'utf8');
-                const response = JSON.parse(responseData);
                 commentBody = response.answer || response.text || 'No review content provided';
               } else {
                 commentBody = '⚠️ Error: Failed to generate review.\nError: ${{ steps.dify_request.outputs.error_message }}';
