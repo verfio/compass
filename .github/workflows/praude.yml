@@ -77,14 +77,23 @@ jobs:
         with:
           script: |
             const fs = require('fs');
+
+            // Read the response data
             const responseData = fs.readFileSync('response.json', 'utf8');
-            const response = JSON.parse(responseData);
+            console.log('Response Data:', responseData); // Debugging statement
 
             let commentBody;
-            if (response) {
-              commentBody = response.answer || response.text || 'No review content provided';
-            } else {
-              commentBody = '⚠️ Error: Failed to generate review.';
+            try {
+              const response = JSON.parse(responseData);
+
+              if (response) {
+                commentBody = response.answer || response.text || 'No review content provided';
+              } else {
+                commentBody = '⚠️ Error: Failed to generate review.';
+              }
+            } catch (error) {
+              console.error('Error parsing JSON:', error);
+              commentBody = '⚠️ Error: Failed to parse response from Dify.';
             }
 
             await github.rest.issues.createComment({
