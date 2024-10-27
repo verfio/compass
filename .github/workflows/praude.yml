@@ -1,4 +1,4 @@
-name: PR Review with Praude
+name: PR Review with Dify
 on:
   pull_request:
     types: [opened, synchronize]
@@ -6,67 +6,133 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Get PR diff and stats
-        id: pr_info
+      - name: Collect PR Data
+        id: pr_data
+        shell: bash
         run: |
-          # Get PR diff
-          git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > pr_diff.txt
+          echo "Collecting PR data..."
           
-          # Get changed files
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | jq -R -s -c 'split("\n")[:-1]')
-          
-          # Get lines added/removed
-          STATS=$(git diff --shortstat ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          LINES_ADDED=$(echo $STATS | grep -o '[0-9]* insertion' | awk '{print $1}')
-          LINES_REMOVED=$(echo $STATS | grep -o '[0-9]* deletion' | awk '{print $1}')
-          
-          # Set outputs
-          echo "changed_files=${CHANGED_FILES}" >> $GITHUB_OUTPUT
-          echo "lines_added=${LINES_ADDED:-0}" >> $GITHUB_OUTPUT
-          echo "lines_removed=${LINES_REMOVED:-0}" >> $GITHUB_OUTPUT
+          # Get the base and head SHA from the GitHub context
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
 
-      - name: Send to Dify
-        id: dify_request
-        run: |
-          PR_DIFF=$(cat pr_diff.txt)
+          # Get the list of changed files
+          FILES_CHANGED=$(git diff --name-only $BASE_SHA $HEAD_SHA | tr '\n' ', ')
           
-          # Escape JSON special characters
-          PR_DIFF_ESCAPED=$(echo "$PR_DIFF" | jq -sR .)
-          PR_TITLE_ESCAPED=$(echo "${{ github.event.pull_request.title }}" | jq -sR .)
-          PR_DESC_ESCAPED=$(echo "${{ github.event.pull_request.body }}" | jq -sR .)
+          # Get the actual changes in the files
+          CHANGED_LINES=$(git diff $BASE_SHA $HEAD_SHA)
+
+          # Create the query text
+          QUERY_TEXT="Review PR: ${{ github.event.pull_request.title }} with changes in files: ${FILES_CHANGED}. Changes: ${CHANGED_LINES}"
+
+          # Prepare JSON data for Dify API
+          JSON_DATA=$(jq -n \
+            --arg query "$QUERY_TEXT" \
+            '{
+              inputs: {},
+              query: $query,
+              response_mode: "streaming",
+              conversation_id: "",
+              user: "github"
+            }')
+
+          # Send request to Dify API
+          RESPONSE_BODY=""
+          RESPONSE=$(curl -s -N -X POST \
+            -H "Authorization: Bearer ${{ secrets.DIFY_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "$JSON_DATA" \
+            "https://verf.io/v1/chat-messages")
+
+          # Handle streaming response
+          while IFS= read -r line; do
+            # Check if the line starts with "data:"
+            if [[ $line == data:* ]]; then
+              # Extract the JSON part
+              json_data="${line#data: }"
+              # Append each parsed JSON to the RESPONSE_BODY
+              RESPONSE_BODY+="$json_data"$'\n'
+            fi
+          done <<< "$RESPONSE"
+
+          # Output the complete response
+          echo "Complete Response: $RESPONSE_BODY"
           
-          # Construct and send request
-          curl -X POST ${{ secrets.DIFY_ENDPOINT }} \
-          -H "Authorization: Bearer ${{ secrets.DIFY_API_KEY }}" \
-          -H "Content-Type: application/json" \
-          -d "{
-            \"inputs\": {
-              \"pr_title\": ${PR_TITLE_ESCAPED},
-              \"pr_description\": ${PR_DESC_ESCAPED},
-              \"files_changed\": ${{ steps.pr_info.outputs.changed_files }},
-              \"lines_added\": \"${{ steps.pr_info.outputs.lines_added }}\",
-              \"lines_removed\": \"${{ steps.pr_info.outputs.lines_removed }}\",
-              \"pr_diff\": ${PR_DIFF_ESCAPED}
-            }
-          }" > response.json
+          # Save the response to a file
+          echo "$RESPONSE_BODY" > response.json
+
+      - name: Upload Response Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: response-artifact
+          path: response.json
+
+  post_comment:
+    runs-on: ubuntu-latest
+    needs: review  # Ensure this job runs after the review job
+    permissions:
+      pull-requests: write 
+    steps:
+      - name: Download Response Artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: response-artifact
+          path: .
 
       - name: Post Review Comment
+        if: always()
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
-            const response = JSON.parse(fs.readFileSync('response.json', 'utf8'));
-            
-            const reviewComment = response.answer || response.text || 'No review generated';
-            
+
+            // Read the response data
+            const responseData = fs.readFileSync('response.json', 'utf8');
+            console.log('Response Data:', responseData); // Debugging statement
+
+            let commentBody = '';
+            const lines = responseData.split('\n'); // Split the response into lines
+
+            for (const line of lines) {
+              if (line.trim()) { // Check if the line is not empty
+                try {
+                  const response = JSON.parse(line); // Parse each line as JSON
+                  if (response.answer) {
+                    commentBody += response.answer; // Concatenate the answer
+                  }
+                } catch (error) {
+                  console.error('Error parsing line:', line, error);
+                }
+              }
+            }
+
+            // Log the final comment body
+            console.log('Final Comment Body:', commentBody);
+
+            // Extract owner and repo from github.repository
+            const [owner, repo] = process.env.GITHUB_REPOSITORY.split('/');
+
+            // Log context values for debugging
+            console.log('Context:', {
+              issue_number: context.issue.number, // This is the PR number
+              owner: owner,
+              repo: repo,
+            });
+
+            // Post the comment on the pull request
             await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.name,
-              body: reviewComment
+              issue_number: context.issue.number, // Use the PR number here
+              owner: owner,
+              repo: repo,
+              body: commentBody || '⚠️ No review content provided.'
             });
