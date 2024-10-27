@@ -1,4 +1,4 @@
-name: PR Review with Praude
+name: PR Review with Dify (Debug)
 on:
   pull_request:
     types: [opened, synchronize]
@@ -6,70 +6,122 @@ on:
 jobs:
   review:
     runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      contents: read
+    
     steps:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Get PR diff and stats
-        id: pr_info
+      - name: Collect PR Data
+        id: pr_data
         run: |
+          echo "Collecting PR data..."
+          
           # Get PR diff
           git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} > pr_diff.txt
+          PR_DIFF=$(cat pr_diff.txt)
+          echo "Got PR diff of $(wc -l < pr_diff.txt) lines"
           
-          # Get changed files
-          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | jq -R -s -c 'split("\n")[:-1]')
+          # Get files changed
+          FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | tr '\n' ', ')
+          echo "Changed files: $FILES_CHANGED"
           
-          # Get lines added/removed
-          STATS=$(git diff --shortstat ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
-          LINES_ADDED=$(echo $STATS | grep -o '[0-9]* insertion' | awk '{print $1}')
-          LINES_REMOVED=$(echo $STATS | grep -o '[0-9]* deletion' | awk '{print $1}')
+          # Create the query
+          QUERY="Please review this Pull Request:
+          Title: ${{ github.event.pull_request.title }}
+          Description: ${{ github.event.pull_request.body }}
+          Files Changed: ${FILES_CHANGED}
           
-          # Set outputs
-          echo "changed_files=${CHANGED_FILES}" >> $GITHUB_OUTPUT
-          echo "lines_added=${LINES_ADDED:-0}" >> $GITHUB_OUTPUT
-          echo "lines_removed=${LINES_REMOVED:-0}" >> $GITHUB_OUTPUT
+          Changes:
+          ${PR_DIFF}"
+          
+          # Escape for JSON
+          QUERY_ESCAPED=$(echo "$QUERY" | jq -Rs .)
+          echo "query=$QUERY_ESCAPED" >> $GITHUB_OUTPUT
+          
+          echo "Data collection complete"
+          echo "Query length: $(echo $QUERY | wc -c) characters"
 
       - name: Send to Dify
         id: dify_request
         run: |
-          PR_DIFF=$(cat pr_diff.txt)
+          echo "Sending request to Dify..."
           
-          # Escape JSON special characters
-          PR_DIFF_ESCAPED=$(echo "$PR_DIFF" | jq -sR .)
-          PR_TITLE_ESCAPED=$(echo "${{ github.event.pull_request.title }}" | jq -sR .)
-          PR_DESC_ESCAPED=$(echo "${{ github.event.pull_request.body }}" | jq -sR .)
+          # Construct request payload
+          PAYLOAD="{
+            \"inputs\": {},
+            \"query\": ${{ steps.pr_data.outputs.query }},
+            \"response_mode\": \"blocking\",
+            \"conversation_id\": \"pr_${{ github.event.pull_request.number }}\",
+            \"user\": \"github_${{ github.repository_owner }}\"
+          }"
           
-          # Construct and send request
-          curl -X POST ${{ secrets.DIFY_ENDPOINT }} \
-          -H "Authorization: Bearer ${{ secrets.DIFY_API_KEY }}" \
-          -H "Content-Type: application/json" \
-          -d "{
-            \"inputs\": {
-              \"pr_title\": ${PR_TITLE_ESCAPED},
-              \"pr_description\": ${PR_DESC_ESCAPED},
-              \"files_changed\": ${{ steps.pr_info.outputs.changed_files }},
-              \"lines_added\": \"${{ steps.pr_info.outputs.lines_added }}\",
-              \"lines_removed\": \"${{ steps.pr_info.outputs.lines_removed }}\",
-              \"pr_diff\": ${PR_DIFF_ESCAPED}
-              \"response_mode\": \"streaming\",
-              \"conversation_id\": \"\",
-              \"user\": \"compass\"
-            }
-          }" > response.json
+          echo "Request payload preview (first 500 chars):"
+          echo "$PAYLOAD" | head -c 500
+          
+          # Send request
+          echo "Sending request..."
+          RESPONSE=$(curl -v -X POST 'https://verf.io/v1/chat-messages' \
+            --header 'Authorization: Bearer ${{ secrets.DIFY_API_KEY }}' \
+            --header 'Content-Type: application/json' \
+            --data-raw "$PAYLOAD" 2>&1)
+          
+          echo "Raw response:"
+          echo "$RESPONSE"
+          
+          # Extract status code
+          STATUS_CODE=$(echo "$RESPONSE" | grep "< HTTP" | awk '{print $3}')
+          echo "Status code: $STATUS_CODE"
+          
+          # Process response
+          if [[ "$STATUS_CODE" == "200" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "$RESPONSE" | sed '1,/^\r$/d' > response.json
+            echo "Response saved to response.json"
+          else
+            echo "status=error" >> $GITHUB_OUTPUT
+            echo "error_message=API request failed with status $STATUS_CODE" >> $GITHUB_OUTPUT
+            echo "Error response: $RESPONSE"
+          fi
 
       - name: Post Review Comment
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
-            const response = JSON.parse(fs.readFileSync('response.json', 'utf8'));
             
-            const reviewComment = response.answer || response.text || 'No review generated';
+            console.log('Preparing to post comment...');
             
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.name,
-              body: reviewComment
-            });
+            try {
+              let commentBody;
+              
+              if ('${{ steps.dify_request.outputs.status }}' === 'success') {
+                console.log('Reading response.json...');
+                const responseContent = fs.readFileSync('response.json', 'utf8');
+                console.log('Response content:', responseContent);
+                
+                const response = JSON.parse(responseContent);
+                commentBody = response.answer || response.text || 'No review content provided';
+              } else {
+                console.log('Using error message for comment');
+                commentBody = '⚠️ Error: Failed to generate review.\nError: ${{ steps.dify_request.outputs.error_message }}';
+              }
+              
+              console.log('Posting comment...');
+              console.log('Comment preview:', commentBody.substring(0, 500));
+              
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.name,
+                body: commentBody
+              });
+              
+              console.log('Comment posted successfully');
+            } catch (error) {
+              console.error('Error posting comment:', error);
+              throw error;
+            }
