@@ -32,18 +32,22 @@ jobs:
           # Get the actual changes in the files
           CHANGED_LINES=$(git diff $BASE_SHA $HEAD_SHA)
 
+          # Get the author's username
+          AUTHOR_USERNAME="${{ github.event.pull_request.user.login }}"
+          
           # Create the query text
           QUERY_TEXT="Review PR: ${{ github.event.pull_request.title }} with changes in files: ${FILES_CHANGED}. Changes: ${CHANGED_LINES}"
 
           # Prepare JSON data for Dify API
           JSON_DATA=$(jq -n \
             --arg query "$QUERY_TEXT" \
+            --arg author "$AUTHOR_USERNAME" \
             '{
               inputs: {},
               query: $query,
               response_mode: "streaming",
               conversation_id: "",
-              user: "github"
+              user: $author
             }')
 
           # Send request to Dify API
