@@ -39,17 +39,16 @@ jobs:
           echo "Sending request to Dify..."
           
           # Prepare JSON data with an empty conversation_id
-          JSON_DATA=$(cat <<EOF
-          {
-            "inputs": {},
-            "query": ${{ steps.pr_data.outputs.query }},
-            "response_mode": "streaming",
-            "conversation_id": "",
-            "user": "github"
-          }
-          EOF
-          )
-          
+          JSON_DATA=$(jq -n \
+            --arg query "${{ steps.pr_data.outputs.query }}" \
+            '{
+              inputs: {},
+              query: $query,
+              response_mode: "streaming",
+              conversation_id: "",
+              user: "github"
+            }')
+
           # Send request and handle streaming response
           RESPONSE_BODY=""
           RESPONSE=$(curl -s -N -X POST \
@@ -80,7 +79,7 @@ jobs:
             echo "status=error" >> $GITHUB_OUTPUT
             echo "error_message=No response received." >> $GITHUB_OUTPUT
           fi
-
+          
       - name: Post Review Comment
         if: always()
         uses: actions/github-script@v6
