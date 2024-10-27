@@ -35,10 +35,7 @@ jobs:
         run: |
           echo "Sending request to Dify..."
           
-          # Generate a UUID for the conversation_id
-          CONVERSATION_ID=$(uuidgen)
-          
-          # Prepare JSON data
+          # Prepare JSON data with an empty conversation_id
           JSON_DATA=$(cat <<EOF
           {
             "inputs": {},
@@ -50,27 +47,30 @@ jobs:
           EOF
           )
           
-          # Send request
-          RESPONSE=$(curl -s -w "\n%{http_code}" \
-            -X POST \
+          # Send request and handle streaming response
+          RESPONSE_BODY=""
+          RESPONSE=$(curl -s -N -X POST \
             -H "Authorization: Bearer ${{ secrets.DIFY_API_KEY }}" \
             -H "Content-Type: application/json" \
             -d "$JSON_DATA" \
             "https://verf.io/v1/chat-messages")
+
+          # Read the response line by line
+          while IFS= read -r line; do
+            # Append each line to the RESPONSE_BODY
+            RESPONSE_BODY+="$line"
+          done <<< "$RESPONSE"
+
+          # Output the complete response
+          echo "Complete Response: $RESPONSE_BODY"
           
-          # Get status code and body
-          STATUS_CODE=$(echo "$RESPONSE" | tail -n1)
-          RESPONSE_BODY=$(echo "$RESPONSE" | head -n -1)
-          
-          echo "Status Code: $STATUS_CODE"
-          echo "Response: $RESPONSE_BODY"
-          
-          if [ "$STATUS_CODE" = "200" ]; then
+          # Check if the response is valid and handle it
+          if [[ -n "$RESPONSE_BODY" ]]; then
             echo "status=success" >> $GITHUB_OUTPUT
             echo "$RESPONSE_BODY" > response.json
           else
             echo "status=error" >> $GITHUB_OUTPUT
-            echo "error_message=API request failed with status $STATUS_CODE" >> $GITHUB_OUTPUT
+            echo "error_message=No response received." >> $GITHUB_OUTPUT
           fi
 
       - name: Post Review Comment
