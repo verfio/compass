@@ -47,7 +47,7 @@ jobs:
               query: $query,
               response_mode: "streaming",
               conversation_id: "",
-              user: $user
+              user: $author
             }')
 
           # Send request to Dify API
