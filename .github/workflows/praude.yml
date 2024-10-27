@@ -11,99 +11,97 @@ jobs:
       contents: read
     
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      - name: Collect PR Data
-        id: pr_data
-        shell: bash
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'  # Specify the Python version you want to use
+
+      - name: Install dependencies
         run: |
-          echo "Collecting PR data..."
-          
-          # Get files changed
-          FILES_CHANGED=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }} | tr '\n' ', ')
-          
-          # Get the actual changes in the files
-          CHANGED_LINES=$(git diff ${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }})
+          pip install requests
 
-          # Create and escape query
-          QUERY_TEXT="Review PR: ${{ github.event.pull_request.title }} with changes in files: ${FILES_CHANGED}. Changes: ${CHANGED_LINES}"
-          QUERY_ESCAPED=$(echo "$QUERY_TEXT" | jq -Rsc .)
-          echo "query=${QUERY_ESCAPED}" >> $GITHUB_OUTPUT
-
-      - name: Send to Dify
+      - name: Collect PR Data and Send to Dify
         id: dify_request
-        shell: bash
         run: |
-          echo "Sending request to Dify..."
-          
-          # Prepare JSON data with an empty conversation_id
-          JSON_DATA=$(jq -n \
-            --arg query "${{ steps.pr_data.outputs.query }}" \
-            '{inputs: {}, query: $query, response_mode: "streaming", conversation_id: "", user: "github"}')
+          import os
+          import json
+          import subprocess
+          import requests
 
-          # Send request and handle streaming response
-          RESPONSE_BODY=""
-          RESPONSE=$(curl -s -N -X POST \
-            -H "Authorization: Bearer ${{ secrets.DIFY_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d "$JSON_DATA" \
-            "https://verf.io/v1/chat-messages")
+          # Get the base and head SHA from the GitHub context
+          base_sha = os.environ['GITHUB_BASE_REF']
+          head_sha = os.environ['GITHUB_HEAD_REF']
 
-          # Read the response line by line
-          while IFS= read -r line; do
-            # Check if the line starts with "data:"
-            if [[ $line == data:* ]]; then
-              # Extract the JSON part
-              json_data="${line#data: }"
-              # Append each parsed JSON to the RESPONSE_BODY
-              RESPONSE_BODY+="$json_data"$'\n'
-            fi
-          done <<< "$RESPONSE"
+          # Get the list of changed files
+          changed_files = subprocess.check_output(
+              ['git', 'diff', '--name-only', base_sha, head_sha]
+          ).decode('utf-8').strip().split('\n')
 
-          # Output the complete response
-          echo "Complete Response: $RESPONSE_BODY"
-          
-          # Check if the response is valid and handle it
-          if [[ -n "$RESPONSE_BODY" ]]; then
-            echo "status=success" >> $GITHUB_OUTPUT
-            echo "$RESPONSE_BODY" > response.json
-          else
-            echo "status=error" >> $GITHUB_OUTPUT
-            echo "error_message=No response received." >> $GITHUB_OUTPUT
-          fi
-          
+          # Get the actual changes in the files
+          changed_lines = subprocess.check_output(
+              ['git', 'diff', base_sha, head_sha]
+          ).decode('utf-8')
+
+          # Create the query text
+          query_text = f"Review PR: {os.environ['GITHUB_EVENT_PULL_REQUEST_TITLE']} with changes in files: {', '.join(changed_files)}. Changes: {changed_lines}"
+
+          # Prepare JSON data for Dify API
+          json_data = {
+              "inputs": {},
+              "query": query_text,
+              "response_mode": "streaming",
+              "conversation_id": "",
+              "user": "github"
+          }
+
+          # Send request to Dify API
+          response = requests.post(
+              "https://verf.io/v1/chat-messages",
+              headers={
+                  "Authorization": f"Bearer {os.environ['DIFY_API_KEY']}",
+                  "Content-Type": "application/json"
+              },
+              data=json.dumps(json_data)
+          )
+
+          # Handle streaming response
+          response_body = ""
+          if response.status_code == 200:
+              for line in response.iter_lines():
+                  if line.startswith(b'data:'):
+                      json_line = line.decode('utf-8')[5:]  # Remove 'data: ' prefix
+                      response_body += json_line + "\n"
+          else:
+              print(f"Error: {response.status_code} - {response.text}")
+
+          # Save the response to a file
+          with open('response.json', 'w') as f:
+              f.write(response_body)
+
       - name: Post Review Comment
         if: always()
         uses: actions/github-script@v6
         with:
           script: |
             const fs = require('fs');
-            
-            try {
-              let commentBody;
-              
-              // Read the response data
-              const responseData = fs.readFileSync('response.json', 'utf8');
-              console.log('Response Data:', responseData); // Debugging statement
+            const responseData = fs.readFileSync('response.json', 'utf8');
+            const response = JSON.parse(responseData);
 
-              // Attempt to parse the response
-              const response = JSON.parse(responseData);
-              
-              if ('${{ steps.dify_request.outputs.status }}' === 'success') {
-                commentBody = response.answer || response.text || 'No review content provided';
-              } else {
-                commentBody = '⚠️ Error: Failed to generate review.\nError: ${{ steps.dify_request.outputs.error_message }}';
-              }
-              
-              await github.rest.issues.createComment({
-                issue_number: context.issue.number,
-                owner: context.repo.owner,
-                repo: context.repo.name,
-                body: commentBody
-              });
-            } catch (error) {
-              console.error('Error:', error);
-              throw error;
+            let commentBody;
+            if (response) {
+              commentBody = response.answer || response.text || 'No review content provided';
+            } else {
+              commentBody = '⚠️ Error: Failed to generate review.';
             }
+
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.name,
+              body: commentBody
+            });
