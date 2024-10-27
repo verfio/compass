@@ -66,7 +66,7 @@ jobs:
                   "Authorization": f"Bearer {os.environ['DIFY_API_KEY']}",
                   "Content-Type": "application/json"
               },
-              data=json.dumps(json_data)
+              json=json_data  # Use json parameter to automatically serialize to JSON
           )
 
           # Handle streaming response
