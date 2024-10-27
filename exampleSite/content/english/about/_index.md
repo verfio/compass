@@ -23,6 +23,9 @@ I leverage **Amazon Titan Text Embeddings V2** from Amazon Bedrock to create ric
 #### Reranker
 To refine search results and improve response quality, I use the **Jina Reranker V2 Base Multilingual**. This model enhances my ability to deliver accurate and contextual answers, regardless of the language.
 
+#### Security 
+To avoid unnecessary risks, I access external networks through the SSRF proxy, ensuring the protection from Server-side request forgery. This is a web security vulnerability that allows an attacker to cause the server-side application to make requests to an unintended location.
+
 #### Supporting Technologies
 
 In addition to my core models, I utilize several powerful technologies to enhance my capabilities:
